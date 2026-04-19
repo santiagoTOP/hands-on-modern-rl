@@ -144,12 +144,47 @@ $$Q((0,0), \text{右}) \approx -1 - 0.9 - 0.81 - 0.729 - 0.656 - 0.590 = -4.685$
 
 ## Q-Learning 的关键性质
 
-| 性质 | 说明 |
+| **性质** | **说明** |
 | --- | --- |
 | Off-policy | 学的是 $Q^*$（最优），但可以用任何策略收集数据 |
 | Model-free | 不需要知道环境的 $P$ 和 $R$ |
 | 逐步更新 | 每走一步就更新，不需要等 episode 结束 |
-| 收敛性 | 在表格情况下，Q-Learning 保证收敛到 $Q^*$ |
+| 收敛性 | 在表格情况下，Q-Learning 保证收敛到 $Q^*$ [^1] |
+
+### 收敛性
+
+Watkins & Dayan (1992) [^1] 证明了：在表格情况下，只要满足以下条件，Q-Learning 保证收敛到最优动作价值 $Q^*$：
+
+1. 所有状态-动作对 $(s, a)$ 被无限次访问
+2. 学习率 $\alpha$ 满足 $\sum_t \alpha_t = \infty$ 且 $\sum_t \alpha_t^2 < \infty$
+
+条件 1 由 ε-贪婪策略保证（只要 $\varepsilon > 0$，每个动作都有非零概率被选中）。条件 2 要求学习率逐渐减小但不能减得太快——实践中常用 $\alpha_t = 1/t$ 或固定的小常数（如 0.1）。
+
+### Decaying ε：让探索逐渐减少
+
+固定 $\varepsilon = 0.1$ 意味着训练后期仍然有 10% 的时间在随机探索——这在不必要地损失回报。更实用的做法是**衰减 ε（decaying ε）**：
+
+$$\varepsilon_t = \max\left(\varepsilon_{\min}, \, \varepsilon_0 - \frac{t}{T_{\text{decay}}}(\varepsilon_0 - \varepsilon_{\min})\right)$$
+
+例如 $\varepsilon_0 = 1.0$，$\varepsilon_{\min} = 0.01$，$T_{\text{decay}} = 10000$：前 10000 步从完全随机线性衰减到 1%，之后保持 1%。这保证了早期充分探索，后期稳定利用。
+
+### On-policy vs Off-policy：SARSA 对比
+
+Q-Learning 的更新中用了 $\max_{a'} Q(s', a')$——它假设下一步会选最优动作。但实际策略（ε-贪婪）在下一步可能随机选了一个非最优动作。这种"学的是最优，做的不是最优"的分离就是 off-policy。
+
+SARSA 是 Q-Learning 的 on-policy 版本，由 Rummery & Niranjan (1994) 提出 [^2]：
+
+$$Q(s, a) \leftarrow Q(s, a) + \alpha \left[ r + \gamma Q(s', a') - Q(s, a) \right]$$
+
+注意区别：Q-Learning 用 $\max_{a'} Q(s', a')$（假设最优），SARSA 用 $Q(s', a')$（实际选的动作 $a'$）。
+
+| | **Q-Learning (off-policy)** | **SARSA (on-policy)** |
+| --- | --- | --- |
+| TD Target | $r + \gamma \max_{a'} Q(s', a')$ | $r + \gamma Q(s', a')$ |
+| 学的是 | $Q^*$（最优策略） | $Q^\pi$（当前策略） |
+| 行为 | 乐观——假设下一步选最优 | 保守——考虑实际探索风险 |
+
+经典例子：在 Cliff Walking 环境中，Q-Learning 学到了贴着悬崖走的最短路径（因为它假设不会随机掉下去），而 SARSA 学到了远离悬崖的更安全路径（因为它知道有 10% 概率会随机探索掉下去）。在安全关键场景中，SARSA 的保守可能更实用。
 
 这些性质使 Q-Learning 成为最实用的 Value-Based 方法。但它有一个根本性的限制：**只能用表格存储 Q 值**。16 个格子的 GridWorld 没问题，但 CartPole 的状态是连续的，Atari 的画面有几十万像素——表格根本装不下。
 

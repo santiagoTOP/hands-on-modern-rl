@@ -176,7 +176,7 @@
   </url>
   <url>
     <loc>https://walkinglabs.github.io/hands-on-modern-rl/chapter03_mdp/bandit/</loc>
-    <lastmod>2026-04-18T16:33:48.497Z</lastmod>
+    <lastmod>2026-04-18T17:42:53.135Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -193,6 +193,12 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://walkinglabs.github.io/hands-on-modern-rl/chapter03_mdp/dp-mc-td/</loc>
+    <lastmod>2026-04-18T17:39:32.657Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://walkinglabs.github.io/hands-on-modern-rl/chapter03_mdp/formalism/</loc>
     <lastmod>2026-04-11T14:57:35.173Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -200,13 +206,13 @@
   </url>
   <url>
     <loc>https://walkinglabs.github.io/hands-on-modern-rl/chapter03_mdp/intro/</loc>
-    <lastmod>2026-04-18T16:37:12.742Z</lastmod>
+    <lastmod>2026-04-18T17:42:53.112Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://walkinglabs.github.io/hands-on-modern-rl/chapter03_mdp/mdp/</loc>
-    <lastmod>2026-04-18T16:34:43.365Z</lastmod>
+    <lastmod>2026-04-18T17:43:16.561Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -218,13 +224,19 @@
   </url>
   <url>
     <loc>https://walkinglabs.github.io/hands-on-modern-rl/chapter03_mdp/policy-objective/</loc>
-    <lastmod>2026-04-18T16:32:51.045Z</lastmod>
+    <lastmod>2026-04-18T17:44:10.972Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://walkinglabs.github.io/hands-on-modern-rl/chapter03_mdp/value-bellman/</loc>
+    <lastmod>2026-04-18T17:38:44.691Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://walkinglabs.github.io/hands-on-modern-rl/chapter03_mdp/value-q/</loc>
-    <lastmod>2026-04-18T16:32:10.627Z</lastmod>
+    <lastmod>2026-04-18T17:43:32.188Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -272,7 +284,7 @@
   </url>
   <url>
     <loc>https://walkinglabs.github.io/hands-on-modern-rl/chapter04_dqn/q-learning/</loc>
-    <lastmod>2026-04-18T17:02:39.648Z</lastmod>
+    <lastmod>2026-04-18T17:45:16.298Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -343,14 +355,26 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://walkinglabs.github.io/hands-on-modern-rl/chapter06_actor_critic/advantage-function/</loc>
+    <lastmod>2026-04-19T03:25:27.664Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://walkinglabs.github.io/hands-on-modern-rl/chapter06_actor_critic/alphago/</loc>
     <lastmod>2026-04-18T16:43:09.583Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://walkinglabs.github.io/hands-on-modern-rl/chapter06_actor_critic/critic-training/</loc>
+    <lastmod>2026-04-19T03:25:27.692Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://walkinglabs.github.io/hands-on-modern-rl/chapter06_actor_critic/intro/</loc>
-    <lastmod>2026-04-18T16:44:03.938Z</lastmod>
+    <lastmod>2026-04-19T03:25:45.356Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -458,7 +482,7 @@
   </url>
   <url>
     <loc>https://walkinglabs.github.io/hands-on-modern-rl/chapter09_continuous_control/her-sparse-reward/</loc>
-    <lastmod>2026-04-12T07:31:12.175Z</lastmod>
+    <lastmod>2026-04-18T17:44:11.890Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -667,8 +691,8 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://walkinglabs.github.io/hands-on-modern-rl/restructure-plan/</loc>
-    <lastmod>2026-04-18T16:25:06.169Z</lastmod>
+    <loc>https://walkinglabs.github.io/hands-on-modern-rl/refinement-plan/</loc>
+    <lastmod>2026-04-18T17:33:26.903Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>

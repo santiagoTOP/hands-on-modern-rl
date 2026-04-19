@@ -118,7 +118,8 @@ const zhSidebar = {
             { text: '章节导览', link: '/chapter03_mdp/intro' },
             { text: '动手：两台老虎机', link: '/chapter03_mdp/bandit' },
             { text: 'MDP 五元组、折扣回报与策略', link: '/chapter03_mdp/mdp' },
-            { text: 'V(s) 与贝尔曼方程', link: '/chapter03_mdp/value-v' },
+            { text: 'V(s) 与贝尔曼方程', link: '/chapter03_mdp/value-bellman' },
+            { text: '经典方法速览：DP、MC 与 TD', link: '/chapter03_mdp/dp-mc-td' },
             { text: '路线一：Q(s,a)', link: '/chapter03_mdp/value-q' },
             { text: '路线二：J(θ)', link: '/chapter03_mdp/policy-objective' },
             { text: '全景地图', link: '/chapter03_mdp/panorama' }
@@ -183,8 +184,12 @@ const zhSidebar = {
           items: [
             { text: '章节导览', link: '/chapter06_actor_critic/intro' },
             {
-              text: '优势函数与 Critic 训练',
-              link: '/chapter06_actor_critic/advantage-critic'
+              text: '优势函数',
+              link: '/chapter06_actor_critic/advantage-function'
+            },
+            {
+              text: 'Critic 训练方法',
+              link: '/chapter06_actor_critic/critic-training'
             },
             {
               text: 'Actor-Critic 架构',
@@ -329,30 +334,7 @@ const zhSidebar = {
           ]
         },
         {
-          text: '第11章：VLM 强化学习',
-          collapsed: false,
-          items: [
-            { text: '章节导览', link: '/chapter11_vlm_rl/intro' },
-            {
-              text: '动手：GRPO 训练 VLM',
-              link: '/chapter11_vlm_rl/vlm-grpo-hands-on'
-            },
-            {
-              text: 'VLM RL 的特殊挑战',
-              link: '/chapter11_vlm_rl/vlm-challenges'
-            },
-            {
-              text: 'VLM RL 框架与前沿',
-              link: '/chapter11_vlm_rl/vlm-frameworks'
-            },
-            {
-              text: '视觉生成模型的 RL 后训练',
-              link: '/chapter11_vlm_rl/visual-generation-rl'
-            }
-          ]
-        },
-        {
-          text: '第12章：Agentic RL',
+          text: '第11章：Agentic RL——工具调用、多轮交互与智能体训练',
           collapsed: false,
           items: [
             { text: '章节导览', link: '/chapter12_agentic_rl/intro' },
@@ -387,6 +369,29 @@ const zhSidebar = {
             {
               text: '延伸阅读索引',
               link: '/chapter12_agentic_rl/extended-readings'
+            }
+          ]
+        },
+        {
+          text: '第12章：VLM 强化学习',
+          collapsed: false,
+          items: [
+            { text: '章节导览', link: '/chapter11_vlm_rl/intro' },
+            {
+              text: '动手：GRPO 训练 VLM',
+              link: '/chapter11_vlm_rl/vlm-grpo-hands-on'
+            },
+            {
+              text: 'VLM RL 的特殊挑战',
+              link: '/chapter11_vlm_rl/vlm-challenges'
+            },
+            {
+              text: 'VLM RL 框架与前沿',
+              link: '/chapter11_vlm_rl/vlm-frameworks'
+            },
+            {
+              text: '视觉生成模型的 RL 后训练',
+              link: '/chapter11_vlm_rl/visual-generation-rl'
             }
           ]
         },
