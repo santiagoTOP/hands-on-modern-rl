@@ -69,7 +69,7 @@ $$\theta^* = \arg\max_\theta \, J(\theta) \tag{3.9}$$
 
 $$\nabla_\theta J(\theta) \propto \mathbb{E}_{\pi_\theta} \left[ \nabla_\theta \log \pi_\theta(a|s) \cdot G_t \right]$$
 
-$\nabla_\theta \log \pi_\theta(a|s)$ 告诉你"怎么调参数让这个动作的概率变大"，$G_t$ 告诉你"这个调整的力度有多大"。两者相乘，就是"好结果对应的动作多加强，坏结果对应的动作多削弱"。这就是策略梯度定理的核心思想——第 5 章将给出完整的数学推导。
+$\nabla_\theta \log \pi_\theta(a|s)$ 告诉你"怎么调参数让这个动作的概率变大"，$G_t$ 告诉你"这个调整的力度有多大"。两者相乘，就是"好结果对应的动作多加强，坏结果对应的动作多削弱"。这就是策略梯度定理的核心思想——[第 5 章](../chapter05_policy_gradient/policy-gradient)将给出完整的数学推导。
 
 沿着"直接优化策略"这条路，主要的算法演进是：
 

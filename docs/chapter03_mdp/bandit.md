@@ -123,11 +123,12 @@ class TwoArmedBandit:
 
 ## 三种策略的 Python 实现
 
-将上面的三种策略用代码实现，观察实际运行结果与理论期望的对比。
+将上面的三种策略用代码实现，观察实际运行结果与理论期望的对比。以下代码均基于前面定义的 `TwoArmedBandit` 类，需先执行该类的定义代码。
 
 ### 策略 1：均匀随机
 
 ```python
+from random import choice
 env = TwoArmedBandit()
 total = sum(env.pull(random.choice(["A", "B"])) for _ in range(100))
 print(f"均匀随机 100 轮总回报: {total}，平均: {total/100:.2f}")
