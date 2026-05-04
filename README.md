@@ -16,6 +16,10 @@
   </p>
 
   <p>
+    <a href="#wechat-group">💬 WeChat Group</a>
+  </p>
+
+  <p>
     <a href="#课程简介">课程简介</a> ·
     <a href="#简介">简介</a> ·
     <a href="#🔥-最新动态-news">最新动态</a> ·
@@ -23,8 +27,7 @@
     <a href="#课程大纲">课程大纲</a> ·
     <a href="#实验代码">实验代码</a> ·
     <a href="#快速开始">快速开始</a> ·
-    <a href="#参与贡献">参与贡献</a> ·
-    <a href="#wechat-group">WeChat Group</a>
+    <a href="#参与贡献">参与贡献</a>
   </p>
 </div>
 
