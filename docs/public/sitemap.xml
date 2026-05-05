@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://walkinglabs.github.io/hands-on-modern-rl/__pdf__/</loc>
+    <lastmod>2026-05-04T15:27:53.387Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://walkinglabs.github.io/hands-on-modern-rl/appendix_common_pitfalls/intro/</loc>
     <lastmod>2026-05-02T10:22:56.623Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -577,8 +583,20 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://walkinglabs.github.io/hands-on-modern-rl/chapter09_alignment/</loc>
+    <lastmod>2026-05-05T03:14:07.685Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://walkinglabs.github.io/hands-on-modern-rl/chapter09_alignment/industrial-post-training/</loc>
+    <lastmod>2026-05-05T09:10:16.790Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://walkinglabs.github.io/hands-on-modern-rl/chapter09_alignment/intro/</loc>
-    <lastmod>2026-05-01T15:04:08.682Z</lastmod>
+    <lastmod>2026-05-05T06:42:28.529Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>

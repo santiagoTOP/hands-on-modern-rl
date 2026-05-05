@@ -4,7 +4,7 @@
   "description": "现代强化学习实战——从代码到原理",
   "type": "module",
   "scripts": {
-    "dev": "vitepress dev docs",
+    "dev": "npm run assets:optimize && vitepress dev docs",
     "build": "npm run assets:optimize && npm run sitemap && vitepress build docs",
     "build:force": "npm run assets:optimize && npm run sitemap && vitepress build docs --force",
     "pdf:build": "node scripts/build-pdf.mjs",

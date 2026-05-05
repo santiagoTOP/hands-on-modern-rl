@@ -12,10 +12,6 @@ concurrency:
   group: release-pdf-${{ github.ref_name }}
   cancel-in-progress: false
 
-env:
-  PDF_PATH: docs/.vitepress/dist/hands-on-modern-rl.pdf
-  PDF_ASSET_NAME: hands-on-modern-rl.pdf
-
 jobs:
   build-and-upload:
     runs-on: ubuntu-latest
@@ -25,8 +21,12 @@ jobs:
         id: release
         run: |
           tag="${GITHUB_REF_NAME}"
+          version="${tag#v}"
+          asset_name="hands-on-modern-rl-open-textbook-v${version}.pdf"
           echo "tag=${tag}" >> "$GITHUB_OUTPUT"
-          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "asset_name=${asset_name}" >> "$GITHUB_OUTPUT"
+          echo "pdf_path=docs/.vitepress/dist/${asset_name}" >> "$GITHUB_OUTPUT"
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,29 +43,54 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install image rendering tools
-        run: sudo apt-get update && sudo apt-get install -y webp
+      - name: Install LaTeX and image conversion tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            texlive-xetex \
+            texlive-latex-extra \
+            texlive-fonts-recommended \
+            texlive-lang-chinese \
+            fonts-noto-cjk \
+            librsvg2-bin \
+            imagemagick \
+            ffmpeg \
+            webp \
+            poppler-utils \
+            ghostscript
 
-      - name: Setup Chrome for PDF rendering
+      - name: Setup Chrome for diagram rendering
         id: setup-chrome
         uses: browser-actions/setup-chrome@v1
 
-      - name: Build PDF
-        run: npm run pdf:build
+      - name: Build LaTeX book PDF
+        run: node scripts/build-latex-book.mjs --limit 0
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
           PDF_VERSION: ${{ steps.release.outputs.version }}
+          PDF_BOOK_LIMIT: 0
+          LATEX_BOOK_FILE_NAME: ${{ steps.release.outputs.asset_name }}
+          PDF_OPTIMIZE: 1
+          PDF_OPTIMIZE_PROFILE: ebook
           PUPPETEER_EXECUTABLE_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+
+      - name: Verify PDF asset
+        run: |
+          test -s "${PDF_PATH}"
+          pdfinfo "${PDF_PATH}" | sed -n '1,18p'
+        env:
+          PDF_PATH: ${{ steps.release.outputs.pdf_path }}
 
       - name: Write release notes
         env:
           TAG_NAME: ${{ steps.release.outputs.tag }}
+          PDF_ASSET_NAME: ${{ steps.release.outputs.asset_name }}
         run: |
           pdf_url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG_NAME}/${PDF_ASSET_NAME}"
           cat > release-notes.md <<EOF
-          # Hands-on Modern RL PDF Book
+          # Hands-On Modern RL Open Textbook ${TAG_NAME}
 
-          这是《Hands-on Modern RL》的 PDF 电子书版本发布页。
+          这是《Hands-On Modern RL：现代强化学习实战》的开放教材 PDF 版本发布页。
 
           ## 下载
 
@@ -73,16 +98,19 @@ jobs:
 
           ## 本版内容
 
-          - README logo 书籍封面
-          - 本书简介与版本说明
-          - 目录、章节开篇页、页眉页脚和右下角页码
+          - LaTeX 书籍版排版，不是网页打印导出
+          - README logo 书籍封面、本书简介与版本说明
+          - 可点击目录、PDF bookmarks/outlines、章节开篇页
+          - 页眉 GitHub 链接、页脚作者信息和右下角页码
           - 作者信息：WalkingLabs；散步 <https://github.com/sanbuphy>
           - GitHub 仓库信息：<https://github.com/${GITHUB_REPOSITORY}>
-          - PDF bookmarks/outlines 与局部参考文献
+          - GIF/WebP/AVIF 构建时抽帧转 PNG，SVG/Mermaid 构建时预渲染为 PDF/PNG
+          - Ghostscript ebook 档优化 PDF 体积，适合 Release 下载与离线阅读
+          - 局部参考文献、脚注和常见 Markdown 结构清理
 
           ## Assets 说明
 
-          GitHub 会自动在 Assets 中显示 Source code (zip) 和 Source code (tar.gz)，那两个是源码包。请下载 hands-on-modern-rl.pdf，它才是本书 PDF。
+          GitHub 会自动在 Assets 中显示 Source code (zip) 和 Source code (tar.gz)，那两个是源码包。请下载 ${PDF_ASSET_NAME}，它才是本书 PDF。
 
           **Full Changelog**: https://github.com/${GITHUB_REPOSITORY}/commits/${TAG_NAME}
           EOF
@@ -91,9 +119,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.release.outputs.tag }}
-          name: Hands-on Modern RL PDF ${{ steps.release.outputs.tag }}
+          name: Hands-On Modern RL Open Textbook ${{ steps.release.outputs.tag }}
           body_path: release-notes.md
-          files: ${{ env.PDF_PATH }}
+          files: ${{ steps.release.outputs.pdf_path }}
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ github.token }}

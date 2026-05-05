@@ -777,6 +777,10 @@ const zhSidebar = {
             {
               text: '9.6 On-Policy Distillation',
               link: '/chapter09_grpo_rlvr/on-policy-distillation'
+            },
+            {
+              text: '9.7 工业界后训练实践全景',
+              link: '/chapter09_alignment/industrial-post-training'
             }
           ]
         },

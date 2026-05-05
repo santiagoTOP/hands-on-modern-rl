@@ -1,0 +1,278 @@
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+
+const __filename = fileURLToPath(import.meta.url)
+const rootDir = path.resolve(path.dirname(__filename), '..')
+
+function findBrowserExecutable() {
+  const candidates = [
+    process.env.PUPPETEER_EXECUTABLE_PATH,
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/Applications/Chromium.app/Contents/MacOS/Chromium',
+    '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+    '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser'
+  ].filter(Boolean)
+
+  return candidates.find((candidate) => fs.existsSync(candidate)) || null
+}
+
+function sanitizeInlineSvg(source) {
+  return source
+    .replace(/^\s*<\?xml[\s\S]*?\?>\s*/i, '')
+    .replace(/^\s*<!doctype[\s\S]*?>\s*/i, '')
+}
+
+function numericLength(value) {
+  const match = String(value || '').match(/^([0-9.]+)(?:px|pt|mm|cm|in)?$/i)
+  if (!match) return null
+  const number = Number(match[1])
+  return Number.isFinite(number) && number > 0 ? number : null
+}
+
+function extractSvgSize(svg) {
+  const tag = svg.match(/<svg\b([^>]*)>/i)?.[1] || ''
+  const width = numericLength(tag.match(/\bwidth=["']([^"']+)["']/i)?.[1])
+  const height = numericLength(tag.match(/\bheight=["']([^"']+)["']/i)?.[1])
+  const viewBox = tag
+    .match(/\bviewBox=["']([^"']+)["']/i)?.[1]
+    ?.trim()
+    .split(/[\s,]+/)
+    .map(Number)
+
+  const viewBoxWidth =
+    viewBox?.length === 4 && Number.isFinite(viewBox[2]) ? viewBox[2] : null
+  const viewBoxHeight =
+    viewBox?.length === 4 && Number.isFinite(viewBox[3]) ? viewBox[3] : null
+
+  const rawWidth = width || viewBoxWidth || 960
+  const rawHeight = height || viewBoxHeight || Math.round((rawWidth * 9) / 16)
+  const scale = rawWidth > 1280 ? 1280 / rawWidth : 1
+
+  return {
+    width: Math.max(320, Math.round(rawWidth * scale)),
+    height: Math.max(180, Math.round(rawHeight * scale))
+  }
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+async function withBrowser(callback) {
+  const executablePath = findBrowserExecutable()
+  if (!executablePath) {
+    throw new Error(
+      'No Chrome/Chromium executable found. Set PUPPETEER_EXECUTABLE_PATH.'
+    )
+  }
+
+  const puppeteerModule = await import('puppeteer-core')
+  const puppeteer = puppeteerModule.default || puppeteerModule
+  const browser = await puppeteer.launch({
+    executablePath,
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage'
+    ]
+  })
+
+  try {
+    return await callback(browser)
+  } finally {
+    await browser.close()
+  }
+}
+
+async function captureElement(browser, html, outputPath) {
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true })
+
+  const page = await browser.newPage()
+  await page.setViewport({
+    width: 1200,
+    height: 800,
+    deviceScaleFactor: 2
+  })
+  await page.setContent(html, { waitUntil: 'load' })
+  await page.evaluateHandle('document.fonts && document.fonts.ready')
+
+  const box = await page.$eval('#capture', (element) => {
+    const rect = element.getBoundingClientRect()
+    return {
+      width: Math.ceil(rect.width),
+      height: Math.ceil(rect.height)
+    }
+  })
+
+  await page.setViewport({
+    width: Math.min(Math.max(box.width + 24, 320), 2400),
+    height: Math.min(Math.max(box.height + 24, 180), 3200),
+    deviceScaleFactor: 2
+  })
+
+  const element = await page.$('#capture')
+  if (!element) throw new Error('Rendered element was not found.')
+  await element.screenshot({ path: outputPath, omitBackground: false })
+  await page.close()
+}
+
+async function renderSvg(inputPath, outputPath) {
+  const svg = sanitizeInlineSvg(fs.readFileSync(inputPath, 'utf8'))
+  const size = extractSvgSize(svg)
+  const baseHref = pathToFileURL(`${path.dirname(inputPath)}${path.sep}`).href
+  const html = `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <base href="${baseHref}">
+    <style>
+      body { margin: 0; background: #fff; }
+      #capture {
+        display: inline-block;
+        padding: 8px;
+        background: #fff;
+      }
+      #capture svg {
+        width: ${size.width}px;
+        height: auto;
+        max-width: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="capture">${svg}</div>
+  </body>
+</html>`
+
+  await withBrowser((browser) => captureElement(browser, html, outputPath))
+}
+
+async function renderMermaid(inputPath, outputPath) {
+  const diagram = fs.readFileSync(inputPath, 'utf8')
+  const mermaidPath = path.join(
+    rootDir,
+    'node_modules',
+    'mermaid',
+    'dist',
+    'mermaid.min.js'
+  )
+  if (!fs.existsSync(mermaidPath)) {
+    throw new Error('Mermaid bundle not found. Run npm install first.')
+  }
+
+  await withBrowser(async (browser) => {
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true })
+
+    const page = await browser.newPage()
+    await page.setViewport({
+      width: 1400,
+      height: 900,
+      deviceScaleFactor: 2
+    })
+    await page.setContent(`<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      body {
+        margin: 0;
+        background: #fff;
+        color: #111;
+        font-family: "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+      #capture {
+        display: inline-block;
+        padding: 12px;
+        background: #fff;
+      }
+      svg {
+        max-width: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="capture"></div>
+  </body>
+</html>`)
+    await page.addScriptTag({ path: mermaidPath })
+
+    const renderError = await page.evaluate(async (source) => {
+      try {
+        window.mermaid.initialize({
+          startOnLoad: false,
+          securityLevel: 'loose',
+          theme: 'default',
+          flowchart: { htmlLabels: true, useMaxWidth: false },
+          sequence: { useMaxWidth: false },
+          gantt: { useMaxWidth: false }
+        })
+        const result = await window.mermaid.render(
+          `diagram-${Date.now()}`,
+          source
+        )
+        document.querySelector('#capture').innerHTML = result.svg
+        return null
+      } catch (error) {
+        return error?.message || String(error)
+      }
+    }, diagram)
+
+    if (renderError) throw new Error(renderError)
+    await page.evaluateHandle('document.fonts && document.fonts.ready')
+
+    const box = await page.$eval('#capture', (element) => {
+      const rect = element.getBoundingClientRect()
+      return {
+        width: Math.ceil(rect.width),
+        height: Math.ceil(rect.height)
+      }
+    })
+
+    await page.setViewport({
+      width: Math.min(Math.max(box.width + 24, 360), 2400),
+      height: Math.min(Math.max(box.height + 24, 220), 3200),
+      deviceScaleFactor: 2
+    })
+
+    const element = await page.$('#capture')
+    if (!element) throw new Error('Rendered Mermaid element was not found.')
+    await element.screenshot({ path: outputPath, omitBackground: false })
+    await page.close()
+  })
+}
+
+async function main() {
+  const [mode, inputPath, outputPath] = process.argv.slice(2)
+  if (!mode || !inputPath || !outputPath) {
+    throw new Error(
+      'Usage: node scripts/render-book-asset.mjs <svg|mermaid> <input> <output.png>'
+    )
+  }
+
+  if (mode === 'svg') {
+    await renderSvg(path.resolve(inputPath), path.resolve(outputPath))
+    return
+  }
+
+  if (mode === 'mermaid') {
+    await renderMermaid(path.resolve(inputPath), path.resolve(outputPath))
+    return
+  }
+
+  throw new Error(`Unsupported render mode: ${mode}`)
+}
+
+main().catch((error) => {
+  console.error(error?.stack || error)
+  process.exitCode = 1
+})

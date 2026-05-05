@@ -5,8 +5,9 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import ReadingProgress from './components/ReadingProgress.vue'
 import TextType from './components/TextType.vue'
 import mediumZoom from 'medium-zoom'
+import { initGithubStars } from './githubStars.js'
 
-const { frontmatter } = useData()
+const { frontmatter, theme } = useData()
 const route = useRoute()
 
 const FONT_SIZE_STORAGE_KEY = 'ct-doc-font-size'
@@ -379,6 +380,7 @@ onMounted(() => {
   updateSidebarEdgePosition()
   initMediumZoom()
   renderSidebarKatex()
+  initGithubStars(theme)
 })
 
 onBeforeUnmount(() => {
