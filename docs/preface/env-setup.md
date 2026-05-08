@@ -227,7 +227,7 @@ pip install lm-eval
 如果遇到版本冲突，可以用以下命令安装经过测试的版本组合：
 
 ```bash
-pip install "transformers>=4.45.0" "trl>=0.12.0" "peft>=0.13.0" "accelerate>=1.0.0"
+pip install "transformers>=5.5.4,<6" "trl>=1.3.0,<2" "datasets>=4.3.0,<5" "accelerate>=1.11.0,<2" "peft>=0.18.0,<1"
 ```
 
 :::

@@ -5,7 +5,7 @@ This script demonstrates how to train a research agent with GRPO in a single-tur
 format by simulating the search environment inside the reward functions.
 
 Prerequisites:
-    pip install trl transformers datasets torch
+    pip install -r requirements.txt
 """
 
 import re
@@ -57,15 +57,23 @@ def extract_xml_tag(text: str, tag: str) -> str:
     match = re.search(f"<{tag}>(.*?)</{tag}>", text, re.DOTALL)
     return match.group(1).strip() if match else ""
 
+def completion_to_text(completion) -> str:
+    """Normalize TRL string and conversational completion formats."""
+    if isinstance(completion, str):
+        return completion
+    if isinstance(completion, list) and completion and isinstance(completion[0], dict):
+        return completion[0].get("content", "")
+    return str(completion)
+
 def format_reward_func(completions, **kwargs) -> list[float]:
     """Reward 1.0 if all required XML tags are present."""
     rewards = []
     for comp in completions:
-        # completions is a list of generated strings
-        has_think = "<think>" in comp and "</think>" in comp
-        has_query = "<query>" in comp and "</query>" in comp
-        has_doc = "<doc>" in comp and "</doc>" in comp
-        has_answer = "<answer>" in comp and "</answer>" in comp
+        text = completion_to_text(comp)
+        has_think = "<think>" in text and "</think>" in text
+        has_query = "<query>" in text and "</query>" in text
+        has_doc = "<doc>" in text and "</doc>" in text
+        has_answer = "<answer>" in text and "</answer>" in text
         if has_think and has_query and has_doc and has_answer:
             rewards.append(1.0)
         else:
@@ -81,8 +89,9 @@ def search_validity_reward_func(completions, **kwargs) -> list[float]:
     import random
     rng = random.Random(42) # Deterministic for reward eval
     for comp in completions:
-        query = extract_xml_tag(comp, "query")
-        doc_id = extract_xml_tag(comp, "doc")
+        text = completion_to_text(comp)
+        query = extract_xml_tag(text, "query")
+        doc_id = extract_xml_tag(text, "doc")
         if not query or not doc_id:
             rewards.append(0.0)
             continue
@@ -101,7 +110,7 @@ def citation_reward_func(completions, support_doc_id, **kwargs) -> list[float]:
     """Reward 1.0 if the model cites the correct document."""
     rewards = []
     for comp, gold_doc in zip(completions, support_doc_id):
-        doc_id = extract_xml_tag(comp, "doc")
+        doc_id = extract_xml_tag(completion_to_text(comp), "doc")
         if doc_id == gold_doc:
             rewards.append(1.0)
         else:
@@ -112,7 +121,7 @@ def accuracy_reward_func(completions, gold_answer, **kwargs) -> list[float]:
     """Reward 1.0 if the final answer is correct."""
     rewards = []
     for comp, gold_ans in zip(completions, gold_answer):
-        ans = extract_xml_tag(comp, "answer")
+        ans = extract_xml_tag(completion_to_text(comp), "answer")
         if ans.lower() == gold_ans.lower():
             rewards.append(1.0)
         else:
@@ -128,6 +137,10 @@ def main():
     args = parser.parse_args()
 
     model_name = args.model_name
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.padding_side = "left"
     
     # Optional: If you want to run this locally on Mac (MPS) or small GPU
     # adjust the parameters below.
@@ -157,6 +170,7 @@ def main():
         ],
         args=training_args,
         train_dataset=dataset,
+        processing_class=tokenizer,
     )
 
     print(f"Starting GRPO Training for {model_name}...")

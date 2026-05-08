@@ -201,14 +201,14 @@ def main():
     print("    - per_device_train_batch_size = 2")
     print("    - learning_rate = 2e-5")
     print("    - num_train_epochs = 2")
-    print("    - max_seq_length = 512")
+    print("    - max_length = 512")
 
     sft_config = SFTConfig(
         output_dir="./output/sft_results",
         per_device_train_batch_size=2,
         learning_rate=2e-5,
         num_train_epochs=2,
-        max_seq_length=512,
+        max_length=512,
         logging_steps=1,          # 每一步都打印日志（数据量小）
         save_strategy="epoch",    # 每个 epoch 保存一次
         report_to="none",         # 不上传到 wandb 等

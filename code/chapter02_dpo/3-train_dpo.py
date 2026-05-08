@@ -48,14 +48,14 @@ training_args = DPOConfig(
     num_train_epochs=3,   # 这里可以调大以加深学习效果
     logging_steps=5,      # 打印日志的频率
     save_steps=20,        # 模型保存频率
-    beta=0.1,             # KL 惩罚系数（trl 1.x 起属于 DPOConfig）
+    beta=0.1,             # KL 惩罚系数（当前 TRL 属于 DPOConfig）
 )
 
 trainer = DPOTrainer(
     model=model,
     args=training_args,
     train_dataset=train_dataset,
-    processing_class=tokenizer,  # trl 1.x 将 tokenizer 重命名为 processing_class
+    processing_class=tokenizer,  # 当前 TRL 使用 processing_class 传入 tokenizer/processor
 )
 
 # ==========================================

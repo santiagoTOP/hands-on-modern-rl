@@ -694,15 +694,23 @@ SELECT: browsecomp-paper...
 
 ```python
 from trl import GRPOTrainer
+from transformers import AutoTokenizer
 
 def search_validity_reward(completions, **kwargs):
     # 如果生成的 query 在后台搜索不到对应的 doc_id，就扣分
     ...
 
+model_name = "Qwen/Qwen2.5-0.5B-Instruct"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+if tokenizer.pad_token is None:
+    tokenizer.pad_token = tokenizer.eos_token
+tokenizer.padding_side = "left"
+
 trainer = GRPOTrainer(
-    model="Qwen/Qwen2.5-0.5B-Instruct",
+    model=model_name,
     reward_funcs=[search_validity_reward, accuracy_reward, format_reward],
     train_dataset=train_prompts,
+    processing_class=tokenizer,
 )
 trainer.train()
 ```
