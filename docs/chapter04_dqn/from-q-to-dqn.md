@@ -58,10 +58,6 @@ $$Q(s, a) \leftarrow Q(s, a) + \alpha \left[ r + \gamma \max_{a'} Q(s', a') - Q(
 
 ![GridWorld 的 Q 表：16 个状态 × 4 个动作 = 64 个值](./images/q-table-gridworld.png)
 
-<div style="text-align: center; font-size: 0.9em; color: var(--vp-c-text-2); margin-top: -10px; margin-bottom: 20px;">
-  <em>GridWorld Q 值热力图可视化。来源：<a href="https://gibberblot.github.io/rl-notes/lectures/qfunction.html" target="_blank" rel="noopener noreferrer">RL Notes (gibberblot)</a></em>
-</div>
-
 初始时整张表全是 0。智能体每走一步，只改表格里一个格子的一个动作。跑够多轮之后，靠近终点的动作先学准，信息通过 TD Target 中的 $\max_{a'} Q(s', a')$ 一项逐步向前传播，最短路径从这 64 个数字里浮现出来。我们不需要显式地告诉智能体”先向右再向下”——它自己从改表的过程中找到了答案。
 
 这个过程之所以如此简洁，依赖一个从未被明说的前提：**表格装得下所有的状态-动作对。** 每一步更新都要查 $Q(s, a)$ 和 $\max_{a'} Q(s', a')$，在 64 行的表上这是零开销。但如果我们离开 GridWorld 呢？
@@ -120,15 +116,11 @@ flowchart LR
 
 **第一个问题：样本相关。** 在 Atari 游戏中，相邻的帧几乎一模一样。以 Pong 为例，标准预处理后的画面是 $84 \times 84 = 7056$ 个像素，而相邻两帧之间可能只有一个 2×2 的球移动了位置——即仅有约 4 个像素发生变化，**帧间差异不到 0.06%**。如果逐帧采样，一个 batch = 32 的训练样本，实际只覆盖了约 2~3 个真正不同的游戏场景，其余全是同一场景的微小变体。这直接违反了 SGD 的独立同分布假设。
 
-![DQN 架构：从像素帧到动作值（Mnih et al. 2015, Figure 1）](./images/sample-correlation.png)
-
-<div style="text-align: center; font-size: 0.9em; color: var(--vp-c-text-2); margin-top: -10px; margin-bottom: 20px;">
-  <em>DQN 网络架构：原始像素帧经过 CNN 输出每个动作的 Q 值。来源：Mnih et al. 2015, <a href="https://www.nature.com/articles/nature14236" target="_blank" rel="noopener noreferrer">Nature 518, 529–533</a>, Figure 1</em>
-</div>
+![DQN 架构：从像素帧到动作值](./images/sample-correlation.png)
 
 就像一个学生只做同一道题的微小变体，看起来做了很多题，实际上只学到了一种解法。更致命的是梯度的效果：32 个高度相关的样本产生的梯度方向几乎一致，32 个梯度求平均 ≈ 1 个梯度——batch size 被相关性"吃掉"了。梯度会被当前几帧绑架，网络参数在局部打转，始终学不到真正通用的策略。
 
-**第二个问题：目标移动。** 这更隐蔽，也更根本。Q-Learning 的更新目标是 $r + \gamma \max_{a'} Q(s', a')$——注意，这个目标本身就依赖 Q 函数，而 Q 函数正在被更新。网络每次更新参数，它下一步要追逐的目标也跟着变了。就像狗追自己的尾巴：往前扑一步，尾巴也往前移一步，永远追不上。
+**第二个问题：目标移动。** 这更隐蔽，也更根本。Q-Learning 的更新目标是 $r + \gamma \max_{a'} Q(s', a')$——注意，这个目标本身就依赖 Q 函数，而 Q 函数正在被更新。网络每次更新参数，它下一步要逼近的目标也跟着改变，于是训练会变成“预测追着一个不断变化的标准答案跑”。
 
 用一个具体例子就能看清这个恶性循环。假设一个极简问题只有 2 个状态和 2 个动作，$\gamma = 0.99$。当前网络的 Q 值输出为：
 
@@ -146,15 +138,11 @@ $$Q_{\theta'}: \quad Q(s_1, a_1)=2.3,\; Q(s_1, a_2)=6.5,\; Q(s_2, a_1)=2.7,\; Q(
 
 ![目标移动问题：同一网络同时产生预测值和目标值，形成反馈循环](./images/moving-target.png)
 
-<div style="text-align: center; font-size: 0.9em; color: var(--vp-c-text-2); margin-top: -10px; margin-bottom: 20px;">
-  <em>目标移动问题：同一个 Q 网络同时产生预测和目标，形成反馈循环。来源：<a href="https://www.anyscale.com/blog/practical-tips-for-training-deep-q-networks" target="_blank" rel="noopener noreferrer">Anyscale Blog (Misha Laskin)</a></em>
-</div>
-
-在表格方法中，这个问题不存在，因为更新是**局部**的。改 $Q(s_1, a_1)$ 这一格，不会影响到 $Q(s_2, a_2)$ 那一格。每个状态-动作对的更新相互独立，下一步的 TD Target 不受影响。但在神经网络中，参数是**全局共享**的——更新一个 $(s,a)$ 对的 Q 值，会连带改变所有其他 $(s,a)$ 对的输出。目标的不稳定被网络共享的参数成倍放大。54 行 Q 表（GridWorld）更新 1 格不影响其他 63 格；几万参数的神经网络改一次，所有状态-动作对的输出都跟着漂。
+在表格方法中，这个问题不存在，因为更新是**局部**的。改 $Q(s_1, a_1)$ 这一格，不会影响到 $Q(s_2, a_2)$ 那一格。每个状态-动作对的更新相互独立，下一步的 TD Target 不受影响。但在神经网络中，参数是**全局共享**的——更新一个 $(s,a)$ 对的 Q 值，会连带改变所有其他 $(s,a)$ 对的输出。目标的不稳定被网络共享的参数成倍放大。64 个状态-动作格子中，表格方法更新 1 格不影响其他 63 格；几万参数的神经网络改一次，所有状态-动作对的输出都可能跟着漂。
 
 两个问题叠加在一起，”直接把神经网络套在 Q-Learning 上”这个看似自然的方法在实践中完全不可用。
 
-这就是 DeepMind 真正的贡献所在。他们并没有发明”用神经网络近似 Q 函数”这个想法——如前所述，这个想法 1990 年代就有人试过。他们贡献的是两个精巧的工程方案，分别精准地解决上述两个问题：**经验回放**（experience replay）打散样本相关性，**目标网络**（target network）冻结出一个稳定的优化目标。有了这两个组件，DQN 才真正能在 Atari 上训练出超越人类的策略。
+这就是 DeepMind 真正的贡献所在。他们并没有发明”用神经网络近似 Q 函数”这个想法——如前所述，这个想法 1990 年代就有人试过。他们给出的关键做法，是分别处理上述两个不稳定来源：**经验回放**（experience replay）打散样本相关性，**目标网络**（target network）冻结出一个稳定的优化目标。有了这两个组件，DQN 才真正能在 Atari 上训练出超越人类的策略。
 
 <details>
 <summary>思考题：1990 年代就有人尝试神经网络 Q-Learning，为什么直到 2013 年才成功？</summary>
