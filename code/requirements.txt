@@ -11,6 +11,10 @@ torch>=2.0.0
 # 强化学习环境
 gymnasium[classic-control]>=0.29.0
 gymnasium[mujoco]>=0.29.0
+gymnasium[atari,accept-rom-license]>=1.0.0
+ale-py>=0.10.0
+opencv-python>=4.8.0
+pyboy>=2.0.0
 
 # 强化学习算法库
 stable-baselines3>=2.0.0

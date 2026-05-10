@@ -1,5 +1,14 @@
 # 第4章：深度强化学习 DQN 实验依赖
 gymnasium[classic-control]>=0.29.0
+gymnasium[atari,accept-rom-license]>=1.0.0
+ale-py>=0.10.0
+opencv-python>=4.8.0
+stable-baselines3>=2.0.0
 torch>=2.0.0
 numpy>=1.24.0
 matplotlib>=3.7.0
+tensorboard>=2.14.0
+swanlab>=0.3.0
+pyboy>=2.0.0
+
+# Pokemon Red DQN 实验需要自行准备合法 ROM；本仓库不分发游戏文件。
