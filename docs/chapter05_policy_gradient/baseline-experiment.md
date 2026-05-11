@@ -1,204 +1,276 @@
-# 5.3 动手：Baseline 降方差
+# 5.3 动手：Baseline 平衡小车挑战
 
-前两节我们走了从直觉到理论的完整路径：赌博机实验让我们看到策略梯度能工作，[策略梯度定理](./policy-gradient)解释了为什么能工作。
+> **本节目标**：用 `CartPole-v1` 对比原始 REINFORCE 和带 Value Baseline 的 REINFORCE，观察基线如何让策略梯度训练更快、更稳。
 
-但 REINFORCE 有一个致命问题——方差太大。这一节我们用一个简单但有效的改进来压制噪声：**减掉一个基线**。通过对比实验，亲眼看看有基线和没基线的差距。
+> **本节代码**：[reinforce_with_baseline.py](https://github.com/walkinglabs/hands-on-modern-rl/blob/main/code/chapter05_policy_gradient/reinforce_with_baseline.py) · [reinforce_cartpole.py](https://github.com/walkinglabs/hands-on-modern-rl/blob/main/code/chapter05_policy_gradient/reinforce_cartpole.py) · [requirements.txt](https://github.com/walkinglabs/hands-on-modern-rl/blob/main/code/chapter05_policy_gradient/requirements.txt)
 
-::: tip 本节会用到的前置知识
+前两节已经说明了 REINFORCE 的基本思想：
+如果一段轨迹得到高回报，
+就提高这段轨迹中动作的概率。
+这个思想很直接，
+但它有一个明显缺点：
+同一个策略在不同回合里可能得到很不一样的回报，
+于是梯度更新会被运气牵着走。
 
-- [策略梯度公式](../chapter03_mdp/policy-objective) $\nabla_\theta J \propto \mathbb{E}[\nabla_\theta \log \pi_\theta(a|s) \cdot G_t]$——基线要加在哪个公式里
-- [状态价值 $V(s)$](../chapter03_mdp/value-bellman)——最好的基线是什么
-- [MC 方法](../chapter03_mdp/dp-mc-td)——为什么 REINFORCE 必须跑完 episode 才能更新
-  :::
+本节不再用无状态赌博机作为主实验。
+赌博机适合解释公式，
+但它太抽象，
+很难看出“策略到底学会了什么”。
+我们换成 `CartPole-v1`：
+小车可以向左或向右推，
+目标是让杆子尽量久地保持竖直。
+这仍然是离散动作任务，
+但它有清楚的画面和失败方式：
+推晚了，杆子会倒；
+推反了，小车会把杆子越带越偏。
 
-## 实验设计
+## 5.3.1 为什么 CartPole 更适合看 Baseline
 
-还是那个两臂赌博机（A: 30%，B: 70%），分别跑两个版本：
+CartPole 的状态有 4 个数字：
+小车位置、小车速度、杆子角度和杆子角速度。
+动作只有两个：
+向左推或向右推。
+每坚持一个时间步，环境给 `+1` 奖励；
+如果杆子倒得太厉害，或者小车离开边界，episode 结束。
+`CartPole-v1` 的最高回合长度是 `500`，
+所以回合回报也可以直接理解为“杆子立住了多少步”。
 
-- **无基线**：标准 REINFORCE，`loss = -log_prob * G`
-- **有基线**：减去运行中的平均回报，`loss = -log_prob * (G - baseline)`
+这个任务刚好暴露 REINFORCE 的高方差问题。
+在训练早期，
+策略可能只是偶然多坚持了几十步。
+原始 REINFORCE 会把这一整段轨迹中的动作都当作“好动作”来强化，
+即使其中有些动作只是碰巧没有立刻造成失败。
+下一回合若开局扰动不同，
+同一个策略又可能很快倒下。
+于是训练曲线会出现明显抖动。
 
-为了公平起见，每个版本各跑 5 次取平均——单次运行的随机性太大，只有平均趋势才有说服力。
+Baseline 要解决的不是“让公式方向改变”，
+而是把学习信号从
+
+$$G_t$$
+
+换成
+
+$$A_t = G_t - V(s_t).$$
+
+这里，$G_t$ 是从时间步 $t$ 开始的折扣累计回报；
+$V(s_t)$ 是价值网络对当前状态平均回报的估计。
+减掉 $V(s_t)$ 之后，
+策略网络不再只问“这一步之后拿了多少分”，
+而是问“这一步之后比原本预期好了多少”。
+如果实际结果比预期好，
+就强化这个动作；
+如果实际结果比预期差，
+就降低这个动作的概率。
+
+这就是 Baseline 在 CartPole 中最直观的作用：
+不是让小车多一个动作，
+而是让它少被偶然的好坏回合误导。
+
+## 5.3.2 运行对比实验
+
+先安装依赖：
+
+```bash
+pip install -r code/chapter05_policy_gradient/requirements.txt
+```
+
+然后运行对比实验：
+
+```bash
+python code/chapter05_policy_gradient/reinforce_with_baseline.py
+```
+
+这个脚本会训练两个策略：
+
+| 实验 | 更新信号 | 额外网络 | 直观含义 |
+| ---- | -------- | -------- | -------- |
+| Vanilla REINFORCE | `G_t` | 无 | 只看这一回合之后实际拿了多少分 |
+| REINFORCE + Baseline | `G_t - V(s_t)` | Value Network | 看实际结果比当前状态的平均预期好多少 |
+
+两个版本都使用同一个 CartPole 环境和同一种策略网络。
+区别只在更新权重：
+原始版本用完整回报 $G_t$；
+Baseline 版本先训练一个价值网络估计 $V(s_t)$，
+再用优势 $G_t - V(s_t)$ 更新策略。
+
+脚本结束后会生成两张图：
+
+| 输出文件 | 说明 |
+| -------- | ---- |
+| `output/reinforce_baseline_reward_comparison.png` | 两种方法的回合奖励曲线 |
+| `output/reinforce_baseline_variance_comparison.png` | 两种方法的梯度估计方差曲线 |
+
+本节讲义中的图像就是由这个脚本导出的。
+
+## 5.3.3 看奖励曲线
+
+先看最直接的结果：小车能立住多久。
+
+![CartPole 上原始 REINFORCE 与 REINFORCE + Baseline 的奖励曲线对比。Baseline 版本更早接近 500 步上限，原始版本学习更慢且波动更明显。](./images/reinforce-baseline-cartpole-reward.png)
+
+图中浅色线是单个 episode 的原始回报，
+深色线是滑动平均。
+单个 episode 的回报会剧烈跳动，
+这是策略梯度任务中很正常的现象：
+同一个策略在不同初始状态下可能撑很久，
+也可能很快失败。
+因此，更应该看滑动平均趋势。
+
+这次运行中，
+原始 REINFORCE 的最后 50 回合平均回报约为 `276.5`。
+它确实在学习，
+但学习过程比较慢，
+中途还有明显回落。
+加入 Value Baseline 后，
+最后 50 回合平均回报约为 `484.1`，
+已经非常接近 CartPole 的 `500` 步上限。
+
+这个差异说明：
+Baseline 不是一个装饰性的数学项。
+在同一个任务中，
+它能让策略更快进入“基本能立住杆子”的区域，
+并减少训练后期突然退步的概率。
+
+## 5.3.4 看方差曲线
+
+奖励曲线回答“策略表现是否变好”。
+方差曲线回答另一个问题：
+为什么 Baseline 会让训练更稳？
+
+![CartPole 上原始 REINFORCE 与 REINFORCE + Baseline 的梯度估计方差对比。Baseline 把回报变成优势后，梯度信号更集中。](./images/reinforce-baseline-cartpole-variance.png)
+
+这张图画的是滑动窗口中的梯度估计方差。
+数值越大，
+说明不同 episode 给出的更新方向差异越大；
+数值越小，
+说明策略每次更新更一致。
+
+在这次运行中，
+原始 REINFORCE 的梯度估计方差约为 `115.34`，
+Baseline 版本约为 `31.16`。
+也就是说，
+Baseline 把方差降到了原来的约 `27%`。
+这和奖励曲线中的现象对应起来：
+更新信号更稳，
+策略就更容易持续朝着“让杆子站住”的方向移动。
+
+## 5.3.5 代码里到底改了什么
+
+原始 REINFORCE 的核心更新是：
 
 ```python
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import random
-import numpy as np
-import matplotlib.pyplot as plt
-
-# ==========================================
-# 策略网络（和 5.1 节相同）
-# ==========================================
-class PolicyNetwork(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.linear = nn.Linear(1, 2)
-
-    def forward(self, x):
-        return torch.softmax(self.linear(x), dim=-1)
-
-# ==========================================
-# 环境
-# ==========================================
-win_probs = [0.3, 0.7]
-num_episodes = 500
-lr = 0.01
-
-def pull_arm(action):
-    return 1.0 if random.random() < win_probs[action] else 0.0
-
-# ==========================================
-# 训练函数（支持有无基线）
-# ==========================================
-def train_reinforce(use_baseline=False, seed=0):
-    torch.manual_seed(seed)
-    random.seed(seed)
-    policy = PolicyNetwork()
-    optimizer = optim.Adam(policy.parameters(), lr=lr)
-    prob_history = []
-
-    baseline = 0.0
-    alpha_baseline = 0.05
-
-    for ep in range(num_episodes):
-        state = torch.tensor([1.0])
-        probs = policy(state)
-        dist = torch.distributions.Categorical(probs)
-        action = dist.sample()
-        log_prob = dist.log_prob(action)
-
-        reward = pull_arm(action.item())
-
-        if use_baseline:
-            # 核心区别：用"比平均好了多少"替代绝对回报
-            advantage = reward - baseline
-            loss = -log_prob * advantage
-            # 基线跟随运行平均（指数移动平均）
-            baseline = baseline + alpha_baseline * (reward - baseline)
-        else:
-            loss = -log_prob * reward
-
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
-        with torch.no_grad():
-            prob_history.append(policy(state)[1].item())
-
-    return prob_history
-
-# ==========================================
-# 运行对比实验（各跑 5 次取平均）
-# ==========================================
-num_runs = 5
-no_baseline_all = [train_reinforce(False, seed=i) for i in range(num_runs)]
-with_baseline_all = [train_reinforce(True, seed=i+100) for i in range(num_runs)]
-
-no_baseline_avg = np.mean(no_baseline_all, axis=0)
-with_baseline_avg = np.mean(with_baseline_all, axis=0)
+returns_t = torch.FloatTensor(returns)
+log_probs = torch.log(action_probs + 1e-8)
+loss = -(log_probs * returns_t).mean()
 ```
 
-代码的关键差异就一处：`advantage = reward - baseline`。基线用指数移动平均来跟踪"到目前为止的平均回报"——这不是最精确的基线（最好的基线是 Critic 网络输出的 $V(s)$），但在这个无状态的赌博机场景中足够用了。
+这里的 `returns_t` 就是 $G_t$。
+如果某一回合刚好撑了很久，
+这段轨迹里的所有动作都会被较大权重强化。
+这并不总是错，
+但它会把很多“碰巧没有出事”的动作也一起强化。
 
-## 实验结果
-
-把两个版本的训练曲线画在一起：
+加入 Baseline 后，
+脚本多了一个价值网络：
 
 ```python
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
-
-# 左图：单次运行对比
-ax1.plot(no_baseline_all[0], alpha=0.7, color='red', label='无基线')
-ax1.plot(with_baseline_all[0], alpha=0.7, color='blue', label='有基线')
-ax1.axhline(y=0.7, color='green', linestyle='--', alpha=0.5, label='最优 (P(B)=0.7)')
-ax1.set_xlabel('Episode')
-ax1.set_ylabel('P(选择 B)')
-ax1.set_title('单次运行')
-ax1.legend()
-ax1.grid(True, alpha=0.3)
-
-# 右图：5次平均对比
-ax2.plot(no_baseline_avg, color='red', linewidth=2, label='无基线 (5次平均)')
-ax2.plot(with_baseline_avg, color='blue', linewidth=2, label='有基线 (5次平均)')
-ax2.axhline(y=0.7, color='green', linestyle='--', alpha=0.5)
-ax2.set_xlabel('Episode')
-ax2.set_ylabel('P(选择 B)')
-ax2.set_title('5 次平均')
-ax2.legend()
-ax2.grid(True, alpha=0.3)
-
-plt.tight_layout()
-plt.savefig('baseline_comparison.png', dpi=150)
-plt.show()
+values = value_net(states_t)
+value_loss = nn.MSELoss()(values, returns_t)
 ```
 
-你会看到这样的画面：
+价值网络学习的是：
+从状态 $s_t$ 出发，
+通常能拿多少分。
+然后策略网络不再直接使用 $G_t$，
+而是使用优势：
 
-```
-单次运行对比                          5 次平均对比
+```python
+with torch.no_grad():
+    values_pred = value_net(states_t)
 
- 1.0 ┤                                1.0 ┤
-     │      ╱━╮  ╱━╮ ╱━━━━          │         ╱━━━━━━━━━━━━
- 0.9 ┤   ╱━╯  ╲╱  ╲╱                │    ╱━━━╱
-     │  ╱ ╱╲╱                        │ ╱━╱
- 0.8 ┤ ╱╱╱         有基线            │╱╱           有基线
-     │╱╱╱╲╱╲╱╲╱╲                     │╱
- 0.7 ┤─ ─ ─ ─ ─ ─ ─ ─ ─             ├─ ─ ─ ─ ─ ─ ─ ─ ─ ─
-     │╲╱ ╲╱╲ ╱╲╱╲╱ 无基线           │╲╱╲╱╲╱╲╱ 无基线
- 0.6 ┤ ╲╱ ╲╱╲╱                       │ ╲╱
-     │  ╲╱                            │  ╲
- 0.5 ┤                                0.5 ┤
-     └──────────────────              └──────────────────
-      0  100 200 300 400 500           0  100 200 300 400 500
+advantages = returns_t - values_pred
+policy_loss = -(log_probs * advantages).mean()
 ```
 
-左图（单次运行）中，红线（无基线）在 0.5 到 0.9 之间剧烈震荡——某次采样到 A 赢了就大幅降低选 B 的概率，下次采样到 B 赢了又拉回来。蓝线（有基线）则平滑得多，稳定地爬升到高概率区间。
+这几行代码就是 Baseline 的核心。
+如果 `advantages` 为正，
+说明这一步之后比预期更好，
+对应动作应该更常出现；
+如果 `advantages` 为负，
+说明这一步之后比预期更差，
+对应动作应该减少。
 
-右图（5 次平均）进一步放大了这个差距。即使取了 5 次平均，红线仍然有明显的波动；蓝线则收敛得更快、更稳。
+注意，Baseline 不依赖当前动作本身，
+因此不会改变策略梯度的期望方向。
+它改变的是估计的噪声大小。
+这也是为什么它叫“降方差”，
+而不是“改目标”。
 
-## 基线到底做了什么？
+## 5.3.6 回到画面中理解
 
-具体看一个例子。假设赌博机的运行平均回报（基线）是 0.5：
+想象小车已经把杆子扶到接近竖直的位置。
+如果它本来就能从这个状态继续坚持很久，
+那么再多坚持几步并不一定说明刚才那个动作特别神奇；
+这只是一个好状态本来就应该有的结果。
+此时 $V(s_t)$ 会比较高，
+减掉它以后，
+优势不会被夸大。
 
-| 情况      | 实际发生了什么 | 无基线的梯度信号    | 有基线的梯度信号                  |
-| --------- | -------------- | ------------------- | --------------------------------- |
-| 摇 A 赢了 | A: 30% 概率    | reward=1 → 增加选 A | reward=1-0.5=**0.5** → 只微微增加 |
-| 摇 A 输了 | A: 70% 概率    | reward=0 → 不变     | reward=0-0.5=**-0.5** → 降低选 A  |
-| 摇 B 赢了 | B: 70% 概率    | reward=1 → 增加选 B | reward=1-0.5=**0.5** → 微微增加   |
-| 摇 B 输了 | B: 30% 概率    | reward=0 → 不变     | reward=0-0.5=**-0.5** → 降低选 B  |
+反过来，
+如果杆子已经明显倾斜，
+小车却通过一个正确动作把局面救回来，
+实际回报可能明显超过价值网络的预期。
+这时 $G_t - V(s_t)$ 为正，
+策略会更明确地强化这个补救动作。
 
-无基线版本中，"摇 A 赢了"和"摇 B 赢了"给出相同的梯度信号（都是 1）——但 B 赢的频率更高，所以 B 的概率最终会更高，只是过程非常嘈杂。有基线版本中，"摇 A 赢了"的信号被基线削弱为 0.5（"虽然赢了，但只比平均好了 0.5"），同时"摇 A 输了"会给出 -0.5 的反向信号（"比平均差了 0.5"）。因为 A 输的频率远高于 B，A 会收到更多的反向信号，B 的概率上升得更干脆。
+这就是 Baseline 比“只看总分”更细的地方：
+它让策略知道，
+同样是拿到 100 分，
+在危险状态下拿到 100 分，
+和在容易状态下拿到 100 分，
+含义并不一样。
 
-这就是基线的核心作用：**把"赢了/输了"的二元信号变成"比平均好了多少"的连续信号**，让梯度估计更精确、更少被运气误导。这个"比平均好了多少"的思想，在后文中会被正式定义为[优势函数 $A(s,a)$](../chapter06_actor_critic/advantage-function)——第 6 章的核心概念。
+## 5.3.7 常见误读
 
-## 本章走过的路
+**误读一：Baseline 会让奖励变大。**
+Baseline 不改环境奖励。
+CartPole 每一步仍然只给 `+1`。
+它改变的是训练时如何解释这些奖励。
 
-从第 1 节到第 3 节，我们完成了一条从直觉到理论再到改进的完整路径：
+**误读二：Baseline 越大越好。**
+如果基线估计很差，
+优势也会很吵。
+这里使用价值网络学习 $V(s)$，
+是因为状态不同，合理的平均回报也不同。
+一个固定常数基线只能处理很简单的无状态问题。
 
-**摇骰子赌博机**让我们亲手看到策略网络能学会"偏爱好的动作"。一个只有 Softmax 层的网络，通过 `loss = -log_prob * reward` 这一行代码，从随机选择进化到稳定选择赢率更高的 B。REINFORCE 本质上就是第 3 章速览过的 [MC 方法](../chapter03_mdp/dp-mc-td)在策略空间的应用——跑完一整局（MC），用实际回报 $G_t$ 来调整策略。
+**误读三：有 Baseline 就是 Actor-Critic。**
+本节仍然是 REINFORCE with Baseline。
+它要等一个完整 episode 结束，
+用 Monte Carlo 回报 $G_t$ 更新。
+下一章的 Actor-Critic 会进一步用 TD 目标替代完整回报，
+做到每一步都可以更新。
 
-**策略梯度定理**解释了为什么那一行代码能工作。数学推导的核心是：$\nabla_\theta J = \mathbb{E}[\nabla_\theta \log \pi(a|s) \cdot G_t]$——好结果强化对应动作的概率。但 REINFORCE 的致命缺陷是方差极大，同一策略跑两次，梯度估计可能天差地别。
+## 小结
 
-**基线实验**给出了第一个压制噪声的方案：减掉一个基线。不要问"这趟跑了多少分"，而问"比平时好了多少"。最好的基线就是 $V(s)$——它衡量的是"平均能拿多少分"，减掉之后就只剩"因为这个动作多拿了多少分"。
-
-贯穿这整条链的暗线是**高方差问题**。基线只解决了一半——我们用了一个简单的运行平均作为基线，但更精确的基线需要一个专门的网络来估计 $V(s)$。这个网络就是 **Critic**，它和 Actor（策略网络）一起构成了 **Actor-Critic 架构**——下一章的主题。
+- CartPole 比赌博机更适合展示 Baseline 的作用，因为它有状态、有失败形态，也能通过回合长度直观看出策略好坏。
+- 原始 REINFORCE 使用 $G_t$ 更新策略，容易被单个 episode 的运气误导。
+- Value Baseline 学习 $V(s_t)$，把更新信号从 $G_t$ 改成 $G_t - V(s_t)$。
+- Baseline 不改变策略梯度的期望方向，但能显著降低方差，使训练更稳定。
+- 本节中的 Baseline 已经出现了 Critic 的影子；下一章会把它发展成真正的 Actor-Critic。
 
 ## 练习
 
-1. **修改赢率差距**：把赌博机改为 A: 49%，B: 51%（差距极小）。REINFORCE 还能学会吗？有基线的版本呢？观察两者收敛速度的差异。
-
-2. **多臂赌博机**：把赌博机改为 3 个摇臂（A: 20%，B: 50%，C: 80%），策略网络改为 3 输出。观察策略是否正确地学会了"最爱 C、最不爱 A"。
-
-3. **基线的选择**：把基线改为固定值 0.5（而不是运行平均），效果如何？这说明了什么？
-
-4. **连续动作空间**：假设你要训练一个机器人走路，状态是关节角度和速度，动作是每个关节的力矩（连续值）。策略网络应该输出什么？怎么从输出中采样动作？
+1. 把 `num_episodes` 改成 `200`，观察两种方法谁更早学到可用策略。
+2. 把学习率从 `1e-3` 改成 `5e-4` 或 `2e-3`，比较 Baseline 是否仍然更稳。
+3. 在脚本中打印 `advantages.mean()` 和 `advantages.std()`，观察优势信号是否围绕 0 波动。
+4. 把 Value Network 的隐藏层从 `128` 改成 `32`，观察基线估计变弱后训练曲线是否更抖。
 
 ## 参考文献
 
 [^1]: Williams, R. J. (1992). Simple statistical gradient-following algorithms for connectionist reinforcement learning. _Machine Learning_, 8(3-4), 229-256. [DOI](https://doi.org/10.1007/BF00992696)
 
-[^2]: Sutton, R. S., et al. (1999). Policy gradient methods for reinforcement learning with function approximation. _Advances in Neural Information Processing Systems_, 12.
+[^2]: Sutton, R. S., McAllester, D., Singh, S., & Mansour, Y. (1999). Policy gradient methods for reinforcement learning with function approximation. _Advances in Neural Information Processing Systems_, 12.
 
-[^3]: Mnih, V., et al. (2016). Asynchronous methods for deep reinforcement learning. _International Conference on Machine Learning (ICML)_. [arXiv:1602.01783](https://arxiv.org/abs/1602.01783)
+[^3]: Gymnasium. CartPole-v1 documentation. <https://gymnasium.farama.org/environments/classic_control/cart_pole/>
