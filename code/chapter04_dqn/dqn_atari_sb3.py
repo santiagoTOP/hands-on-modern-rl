@@ -292,6 +292,11 @@ def main() -> None:
         exploration_final_eps=args.exploration_final_eps,
         max_grad_norm=10,
         optimize_memory_usage=args.optimize_memory_usage,
+        replay_buffer_kwargs=(
+            {"handle_timeout_termination": False}
+            if args.optimize_memory_usage
+            else None
+        ),
         tensorboard_log=str(tensorboard_dir),
         verbose=1,
         seed=args.seed,

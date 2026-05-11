@@ -28,9 +28,9 @@ DEFAULT_RUNS = {
         "fill": "#93C5FD",
     },
     "pong": {
-        "csv": Path("output/dqn_atari_runs/ALE_Pong-v5_dqn_seed0/eval/eval_metrics.csv"),
-        "output": Path("docs/chapter04_dqn/images/dqn-atari-pong-5k-eval-curve.png"),
-        "title": "ALE/Pong-v5 DQN evaluation",
+        "csv": Path("output/dqn_atari_long/PongNoFrameskip-v4_dqn_seed0_10m_zoo_aligned/eval/eval_metrics.csv"),
+        "output": Path("docs/chapter04_dqn/images/dqn-atari-pong-training-curve.png"),
+        "title": "PongNoFrameskip-v4 DQN evaluation",
         "color": "#DC2626",
         "fill": "#FCA5A5",
     },

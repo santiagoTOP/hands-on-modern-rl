@@ -1,7 +1,7 @@
 """
 Train a DQN agent on common discrete-action Gymnasium environments.
 
-This script is the practical companion for Chapter 4.6. It covers the tasks
+This script is the practical companion for Chapter 4 DQN experiments. It covers the tasks
 where DQN is usually a good first choice: Classic Control and discrete Box2D
 environments such as CartPole, MountainCar, Acrobot, and LunarLander.
 

@@ -634,46 +634,42 @@ const zhSidebar = {
           collapsed: false,
           items: [
             {
-              text: '4.1 为什么需要深度 Q 网络',
+              text: '4.1 DQN 的必要性',
               link: '/chapter04_dqn/from-q-to-dqn'
             },
             {
-              text: '4.2 深度 Q 网络的三个组件',
+              text: '4.2 DQN 的结构',
               link: '/chapter04_dqn/dqn-components'
             },
             {
-              text: '4.3 LunarLander 训练分析',
-              link: '/chapter04_dqn/training-analysis'
-            },
-            {
-              text: '4.4 LunarLander 实战',
+              text: '4.3 动手：LunarLander 实战',
               link: '/chapter04_dqn/lunar-lander'
             },
             {
-              text: '4.5 深度 Q 网络家族',
+              text: '4.4 DQN 改进家族',
               link: '/chapter04_dqn/dqn-family'
             },
             {
-              text: '4.6 动手：视觉游戏项目',
+              text: '4.5 动手：视觉游戏项目',
               link: '/chapter04_dqn/visual-game-projects'
             }
           ]
         },
         {
-          text: '5. 策略梯度与 REINFORCE',
+          text: '5. Policy-Based 方法',
           link: '/chapter05_policy_gradient/intro',
           collapsed: false,
           items: [
             {
-              text: '5.1 摇骰子游戏',
+              text: '5.1 动手：摇骰子赌博机',
               link: '/chapter05_policy_gradient/dice-game'
             },
             {
-              text: '5.2 策略梯度',
+              text: '5.2 策略梯度定理与 REINFORCE',
               link: '/chapter05_policy_gradient/policy-gradient'
             },
             {
-              text: '5.3 Baseline',
+              text: '5.3 动手：Baseline 降方差',
               link: '/chapter05_policy_gradient/baseline-experiment'
             }
           ]
@@ -711,15 +707,19 @@ const zhSidebar = {
               link: '/chapter07_ppo/ppo-lunar-lander'
             },
             {
-              text: '7.2 PPO 推导',
+              text: '7.2 BipedalWalker 连续控制',
+              link: '/chapter07_ppo/ppo-bipedal-walker'
+            },
+            {
+              text: '7.3 PPO 推导',
               link: '/chapter07_ppo/ppo-math'
             },
             {
-              text: '7.3 信任域与裁剪',
+              text: '7.4 信任域与裁剪',
               link: '/chapter07_ppo/trust-region-clipping'
             },
             {
-              text: '7.4 GAE 与奖励模型',
+              text: '7.5 GAE 与奖励模型',
               link: '/chapter07_ppo/gae-reward-model'
             }
           ]
