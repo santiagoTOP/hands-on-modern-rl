@@ -1092,11 +1092,21 @@
 .vp-doc > img {
   display: block;
   margin: 2rem auto;
-  max-height: 320px;
   width: auto;
-  max-width: 100%;
+  max-width: min(100%, 560px);
+  max-height: 280px;
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-light);
+}
+
+.vp-doc p > img[src*='diagram'],
+.vp-doc figure > img[src*='diagram'],
+.vp-doc > img[src*='diagram'],
+.vp-doc p > img[src*='mermaid'],
+.vp-doc figure > img[src*='mermaid'],
+.vp-doc > img[src*='mermaid'] {
+  max-width: min(100%, 760px);
+  max-height: none;
 }
 
 .vp-doc .image-caption {
@@ -1126,6 +1136,7 @@
 
 .vp-doc .mermaid-static img {
   max-width: 100%;
+  max-height: none;
   height: auto;
 }
 
