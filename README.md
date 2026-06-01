@@ -395,7 +395,7 @@ For repository-specific maintenance rules, see [`AGENTS.md`](AGENTS.md).
 
 Our team has also created other courses. Take a look:
 
-- [**Learn Harness Engineering**](https://github.com/walkinglabs/learn-harness-engineering) — A course on environment engineering for AI coding agents. Through 12 lectures and 6 projects, it teaches you to build instructions, state management, verification, and control mechanisms that make model output reliable.
+- [**Learn Harness Engineering**](https://github.com/walkinglabs/learn-harness-engineering) — A course on Harness Engineering for AI coding agents. Through 12 lectures and 6 projects, it teaches you to build instructions, state management, verification, and control mechanisms that make model output reliable.
 - [**Modern LLM Notebook**](https://github.com/walkinglabs/modern-llm-notebook) — Build modern LLMs from scratch through 23 runnable Jupyter Notebooks in PyTorch, covering Tokenizer, Transformer, training, inference, alignment, and frontier topics.
 
 ## Discussion Group (WeChat)
