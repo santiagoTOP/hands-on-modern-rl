@@ -32,13 +32,13 @@ Two classical estimators sit at opposite ends of the bias-variance spectrum:
 
 **Temporal-Difference (TD) estimator** (review: [TD training for the critic](../chapter06_actor_critic/critic-training)). Use one-step bootstrapping:
 
-$$A_t^{\\text{TD}} = r_t + \\gamma V(s_{t+1}) - V(s_t) = \\delta_t$$
+$$A_t^{\text{TD}} = r_t + \gamma V(s_{t+1}) - V(s_t) = \delta_t$$
 
 TD has low variance (only one step of randomness), but it is biased. If the critic's estimate $V(s_{t+1})$ is inaccurate, the error is injected into the advantage.
 
 **Monte Carlo (MC) estimator** (review: [MC methods](../chapter03_mdp/dp-mc-td)). Wait until the end of the episode:
 
-$$A_t^{\\text{MC}} = G_t - V(s_t) = \\sum_{k=0}^{\\infty} \\gamma^k r_{t+k} - V(s_t)$$
+$$A_t^{\text{MC}} = G_t - V(s_t) = \sum_{k=0}^{\infty} \gamma^k r_{t+k} - V(s_t)$$
 
 MC is unbiased with respect to the return $G_t$, but it has very high variance. Every random event in the remaining trajectory affects the estimate.
 
@@ -46,27 +46,27 @@ In practice, neither extreme is ideal as a default. We want a smooth knob that t
 
 ## GAE: A Controlled Bias-Variance Tradeoff
 
-GAE (Schulman et al., 2016) introduces a parameter $\\lambda \\in [0,1]$ that interpolates between TD and MC:
+GAE (Schulman et al., 2016) introduces a parameter $\lambda \in [0,1]$ that interpolates between TD and MC:
 
-$$\\hat{A}_t^{\\text{GAE}(\\gamma, \\lambda)} = \\sum_{k=0}^{\\infty} (\\gamma \\lambda)^k \\delta_{t+k}$$
+$$\hat{A}_t^{\text{GAE}(\gamma, \lambda)} = \sum_{k=0}^{\infty} (\gamma \lambda)^k \delta_{t+k}$$
 
 where the TD error is
 
-$$\\delta_t = r_t + \\gamma V(s_{t+1}) - V(s_t).$$
+$$\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t).$$
 
 This formula is short, but its meaning is concrete:
 
-- If $\\lambda = 0$: $\\hat{A}_t = \\delta_t$ (one-step TD, higher bias, lower variance)
-- If $\\lambda = 1$: $\\hat{A}_t = \\sum_{k=0}^{\\infty} \\gamma^k \\delta_{t+k} = G_t - V(s_t)$ (MC-style, lower bias, higher variance)
-- If $0 < \\lambda < 1$: later TD errors are down-weighted by $(\\gamma \\lambda)^k$
+- If $\lambda = 0$: $\hat{A}_t = \delta_t$ (one-step TD, higher bias, lower variance)
+- If $\lambda = 1$: $\hat{A}_t = \sum_{k=0}^{\infty} \gamma^k \delta_{t+k} = G_t - V(s_t)$ (MC-style, lower bias, higher variance)
+- If $0 < \lambda < 1$: later TD errors are down-weighted by $(\gamma \lambda)^k$
 
-For example, with $\\lambda = 0.95$:
+For example, with $\lambda = 0.95$:
 
-$$\\hat{A}_t = \\delta_t + 0.95\\gamma \\cdot \\delta_{t+1} + (0.95\\gamma)^2 \\cdot \\delta_{t+2} + (0.95\\gamma)^3 \\cdot \\delta_{t+3} + \\cdots$$
+$$\hat{A}_t = \delta_t + 0.95\gamma \cdot \delta_{t+1} + (0.95\gamma)^2 \cdot \delta_{t+2} + (0.95\gamma)^3 \cdot \delta_{t+3} + \cdots$$
 
-The further into the future, the less we trust the credit assignment, so we discount it twice: once by $\\gamma$ (task horizon), once by $\\lambda$ (estimation horizon).
+The further into the future, the less we trust the credit assignment, so we discount it twice: once by $\gamma$ (task horizon), once by $\lambda$ (estimation horizon).
 
-| $\\lambda$ | Roughly equals | Bias   | Variance   | When it tends to work               |
+| $\lambda$ | Roughly equals | Bias   | Variance   | When it tends to work               |
 | ---------- | -------------- | ------ | ---------- | ----------------------------------- |
 | 0.0        | pure TD        | high   | low        | critic is weak, reward is noisy     |
 | 0.9        | TD-leaning     | medium | medium-low | general-purpose                     |
@@ -74,7 +74,7 @@ The further into the future, the less we trust the credit assignment, so we disc
 | 0.99       | MC-leaning     | low    | higher     | critic is accurate, fine evaluation |
 | 1.0        | pure MC        | lowest | high       | short episodes, plenty of data      |
 
-In many PPO implementations, $\\lambda = 0.95$ (or $0.98$) is a robust default.
+In many PPO implementations, $\lambda = 0.95$ (or $0.98$) is a robust default.
 
 ```python
 # ==========================================
@@ -128,15 +128,15 @@ In classic RL environments (CartPole, LunarLander), the environment provides the
 
 Who decides whether an answer is good?
 
-The standard RLHF recipe introduces a reward model $r_\\phi(x, y)$ that maps a prompt $x$ and a model response $y$ to a scalar. The RM is trained from **pairwise human preferences**.
+The standard RLHF recipe introduces a reward model $r_\phi(x, y)$ that maps a prompt $x$ and a model response $y$ to a scalar. The RM is trained from **pairwise human preferences**.
 
 ### Preference Loss (Bradley-Terry / Logistic)
 
-Suppose we have two answers to the same prompt: a preferred answer $y_w$ (winner) and a less preferred answer $y_l$ (loser). The RM is trained so that $r_\\phi(x, y_w) > r_\\phi(x, y_l)$. A common loss is:
+Suppose we have two answers to the same prompt: a preferred answer $y_w$ (winner) and a less preferred answer $y_l$ (loser). The RM is trained so that $r_\phi(x, y_w) > r_\phi(x, y_l)$. A common loss is:
 
-$$L_{\\text{RM}} = -\\log \\sigma\\big(r_\\phi(x, y_w) - r_\\phi(x, y_l)\\big)$$
+$$L_{\text{RM}} = -\log \sigma\big(r_\phi(x, y_w) - r_\phi(x, y_l)\big)$$
 
-where $\\sigma(\\cdot)$ is the sigmoid function. If the score gap is large, the probability of preferring the winner becomes close to 1.
+where $\sigma(\cdot)$ is the sigmoid function. If the score gap is large, the probability of preferring the winner becomes close to 1.
 
 ### A Minimal Training Sketch
 
@@ -172,7 +172,7 @@ The real issue is credit assignment: which tokens actually contributed to the fi
 
 PPO addresses this by applying policy gradients at the token level. Conceptually:
 
-$$\\nabla_\\theta L \\propto A_t \\cdot \\nabla_\\theta \\log \\pi_\\theta(a_t | s_t)$$
+$$\nabla_\theta L \\propto A_t \cdot \nabla_\theta \log \pi_\theta(a_t | s_t)$$
 
 Tokens that increase the advantage are reinforced; tokens that decrease it are discouraged. In practice, we also add a KL penalty against a reference policy to keep updates from drifting too far.
 

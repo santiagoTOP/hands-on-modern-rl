@@ -94,16 +94,16 @@ In 2016, DeepMind's **AlphaGo** combined deep RL with Monte Carlo Tree Search an
 In 2017, OpenAI introduced **PPO (Proximal Policy Optimization)**. Compared to early policy-gradient methods, PPO found a practical balance between training stability and sample efficiency. Its central idea is to limit the size of each policy update via **clipping**, preventing the infamous "step too large, training collapses" failure mode:
 
 $$
-\mathcal{L}^{\\text{CLIP}}(\\theta) =
-\\mathbb{E}_t \\left[
-\\min\\left(
-\\frac{\\pi_\\theta(a_t|s_t)}{\\pi_{\\theta_{\\text{old}}}(a_t|s_t)} \\hat{A}_t,\\;
-\\text{clip}\\left(\\frac{\\pi_\\theta(a_t|s_t)}{\\pi_{\\theta_{\\text{old}}}(a_t|s_t)}, 1-\\epsilon, 1+\\epsilon\\right) \\hat{A}_t
-\\right)
-\\right].
+\mathcal{L}^{\text{CLIP}}(\theta) =
+\mathbb{E}_t \left[
+\min\left(
+\frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\text{old}}}(a_t|s_t)} \hat{A}_t,\\;
+\text{clip}\left(\frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\text{old}}}(a_t|s_t)}, 1-\epsilon, 1+\epsilon\right) \hat{A}_t
+\right)
+\right].
 $$
 
-Here, the ratio $\\pi_\\theta / \\pi_{\\theta_{\\text{old}}}$ compares the new policy against the old one, $\\hat{A}_t$ is an estimate of the advantage function, and $\\epsilon$ is typically 0.1 to 0.2. The clipping behaves like a guardrail: each update is allowed to move, but not too far. PPO quickly became a default workhorse in industry, and OpenAI later used large-scale PPO-based systems (for example, OpenAI Five) to reach world-champion level in Dota 2.
+Here, the ratio $\pi_\theta / \pi_{\theta_{\text{old}}}$ compares the new policy against the old one, $\hat{A}_t$ is an estimate of the advantage function, and $\epsilon$ is typically 0.1 to 0.2. The clipping behaves like a guardrail: each update is allowed to move, but not too far. PPO quickly became a default workhorse in industry, and OpenAI later used large-scale PPO-based systems (for example, OpenAI Five) to reach world-champion level in Dota 2.
 
 ## 4. The LLM Era: New Paradigms for Alignment and Reasoning (2020s-Present)
 
@@ -112,10 +112,10 @@ Just when it seemed RL might stay mostly within games and robotics, large langua
 In 2022, OpenAI released ChatGPT. A key ingredient behind its instruction-following behavior was **RLHF (Reinforcement Learning from Human Feedback)**. The standard RLHF recipe trains a reward model to approximate human preference, then uses PPO to optimize a language-model policy:
 
 $$
-\\max_\\theta\\;
-\\mathbb{E}_{x \\sim \\mathcal{D},\\; y \\sim \\pi_\\theta(\\cdot|x)}\\left[
-r_\\phi(x,y) - \\beta\\, \\text{KL}\\left(\\pi_\\theta(\\cdot|x) \\| \\pi_{\\text{ref}}(\\cdot|x)\\right)
-\\right].
+\max_\theta\\;
+\mathbb{E}_{x \\sim \mathcal{D},\\; y \\sim \pi_\theta(\\cdot|x)}\left[
+r_\phi(x,y) - \beta\\, \text{KL}\left(\pi_\theta(\\cdot|x) \\| \pi_{\text{ref}}(\\cdot|x)\right)
+\right].
 $$
 
 The KL penalty term keeps the policy from drifting too far away from a reference model, which is essential for preventing reward hacking.
@@ -129,36 +129,36 @@ The KL penalty term keeps the policy from drifting too far away from a reference
 In 2023, researchers introduced **DPO (Direct Preference Optimization)**. The key insight is that you can bypass the explicit reward-model training step and directly fine-tune the policy on preference pairs using a simple classification-like loss. DPO can be derived from the RLHF objective:
 
 $$
-\\mathcal{L}_{\\text{DPO}}(\\theta) =
--\\mathbb{E}_{(x, y_w, y_l)}\\left[
-\\log \\sigma\\left(
-\\beta \\log \\frac{\\pi_\\theta(y_w|x)}{\\pi_{\\text{ref}}(y_w|x)}
-- \\beta \\log \\frac{\\pi_\\theta(y_l|x)}{\\pi_{\\text{ref}}(y_l|x)}
-\\right)
-\\right].
+\mathcal{L}_{\text{DPO}}(\theta) =
+-\mathbb{E}_{(x, y_w, y_l)}\left[
+\log \sigma\left(
+\beta \log \frac{\pi_\theta(y_w|x)}{\pi_{\text{ref}}(y_w|x)}
+- \beta \log \frac{\pi_\theta(y_l|x)}{\pi_{\text{ref}}(y_l|x)}
+\right)
+\right].
 $$
 
-Here, $y_w$ (winner) and $y_l$ (loser) are the preferred and dispreferred completions, and $\\sigma$ is the sigmoid function. DPO significantly lowers the engineering barrier of RLHF and became widely adopted in open-source post-training workflows.
+Here, $y_w$ (winner) and $y_l$ (loser) are the preferred and dispreferred completions, and $\sigma$ is the sigmoid function. DPO significantly lowers the engineering barrier of RLHF and became widely adopted in open-source post-training workflows.
 
 From 2024 to 2025, reasoning-focused models (e.g., OpenAI o1 and DeepSeek-R1) brought another shift. In tasks with objective rules (math correctness, code compilation), it became increasingly clear that you can sometimes skip a supervised warm start and train with **pure RL** directly from a base model.
 
-In particular, DeepSeek-R1-Zero demonstrated that with verifiable reward signals, pure RL can lead to the emergence of long chains of thought and even distinct "a-ha" moments. Their **GRPO (Group Relative Policy Optimization)** approach removes the critic network used in PPO, and instead uses group-normalized relative rewards to build an advantage-like signal. For a prompt $q$, sample a group of responses $\\{o_1, o_2, \\ldots, o_G\\}$ and normalize rewards:
+In particular, DeepSeek-R1-Zero demonstrated that with verifiable reward signals, pure RL can lead to the emergence of long chains of thought and even distinct "a-ha" moments. Their **GRPO (Group Relative Policy Optimization)** approach removes the critic network used in PPO, and instead uses group-normalized relative rewards to build an advantage-like signal. For a prompt $q$, sample a group of responses $\\{o_1, o_2, \ldots, o_G\\}$ and normalize rewards:
 
 $$
-\\tilde{r}_i = \\frac{r_i - \\text{mean}(r_1, \\ldots, r_G)}{\\text{std}(r_1, \\ldots, r_G)}.
+\tilde{r}_i = \frac{r_i - \text{mean}(r_1, \\ldots, r_G)}{\text{std}(r_1, \\ldots, r_G)}.
 $$
 
 Then optimize a clipped objective similar in spirit to PPO:
 
 $$
-\\mathcal{L}_{\\text{GRPO}}(\\theta) =
-\\mathbb{E}_q \\left[
-\\frac{1}{G} \\sum_{i=1}^{G}
-\\min\\left(
-\\frac{\\pi_\\theta(o_i|q)}{\\pi_{\\theta_{\\text{old}}}(o_i|q)} \\tilde{r}_i,\\;
-\\text{clip}\\left(\\frac{\\pi_\\theta(o_i|q)}{\\pi_{\\theta_{\\text{old}}}(o_i|q)}, 1-\\epsilon, 1+\\epsilon\\right) \\tilde{r}_i
-\\right)
-\\right].
+\mathcal{L}_{\text{GRPO}}(\theta) =
+\mathbb{E}_q \left[
+\frac{1}{G} \sum_{i=1}^{G}
+\min\left(
+\frac{\pi_\theta(o_i|q)}{\pi_{\theta_{\text{old}}}(o_i|q)} \tilde{r}_i,\\;
+\text{clip}\left(\frac{\pi_\theta(o_i|q)}{\pi_{\theta_{\text{old}}}(o_i|q)}, 1-\epsilon, 1+\epsilon\right) \tilde{r}_i
+\right)
+\right].
 $$
 
 This lightweight design avoids training a separate critic network and uses the relative ranking within a group to drive learning, making large-scale reasoning RL more practical on clusters.

@@ -148,7 +148,7 @@ a_{0:H-1}^{*}
 \gamma^h\hat{r}_\phi(\hat{s}_{t+h},a_{t+h})
 $$
 
-In this formula, $\arg\max$ means "find the candidate action sequence with the highest score"; $H$ is the lookahead horizon; the hats on $\hat{s}$ and $\hat{r}$ indicate that these states and rewards come from the world model. MPC usually does not execute the whole sequence at once. It executes only the first action $a_0^\*$, observes the new real state, and plans again.
+In this formula, $\arg\max$ means "find the candidate action sequence with the highest score"; $H$ is the lookahead horizon; the hats on $\hat{s}$ and $\hat{r}$ indicate that these states and rewards come from the world model. MPC usually does not execute the whole sequence at once. It executes only the first action $a_0^*$, observes the new real state, and plans again.
 
 The model can also generate imagined experience through rollout and use it to update the policy or value function:
 
@@ -261,7 +261,7 @@ a_{0:H-1}^{*}
 \sum_{h=0}^{H-1}\gamma^h\hat r_{t+h}^{(j)}
 $$
 
-Read this formula as a procedure. First randomly generate $M$ candidate action sequences. The $j$-th sequence is rolled forward for $H$ steps in the model, producing a sequence of predicted rewards $\hat r_{t+h}^{(j)}$. Sum these rewards, and choose the sequence with the highest total score. Finally, execute only $a_0^\*$, observe the new real state, and plan again. This is the minimal version of model predictive control.
+Read this formula as a procedure. First randomly generate $M$ candidate action sequences. The $j$-th sequence is rolled forward for $H$ steps in the model, producing a sequence of predicted rewards $\hat r_{t+h}^{(j)}$. Sum these rewards, and choose the sequence with the highest total score. Finally, execute only $a_0^*$, observe the new real state, and plan again. This is the minimal version of model predictive control.
 
 The full script is in [minimal_mbrl_point_mass.py](../../../chapter12_future_trends/embodied-intelligence/model-based-rl/snippets/minimal_mbrl_point_mass.py), and can be run directly:
 

@@ -13,7 +13,7 @@ This was one of the most widely recognized moments in the history of reinforceme
 In this section, we reproduce AlphaGo's core idea with minimal code: we train an AI that can learn to play Go on a 6x6 board by self-play.
 
 ::: tip Why 6x6?
-Standard Go is 19x19, with a state space on the order of $2 \\times 10^{170}$, far beyond anything we can enumerate.
+Standard Go is 19x19, with a state space on the order of $2 \times 10^{170}$, far beyond anything we can enumerate.
 A 6x6 board reduces the complexity to a level that can be trained on a laptop, while still preserving the core mechanics of Go:
 territory, captures, and win/loss judgment.
 All key AlphaGo components, policy network, value network, and MCTS, are still present on 6x6.

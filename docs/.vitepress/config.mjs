@@ -418,7 +418,7 @@ function rescueMathInInline(md) {
               t.content = mathStore.get(part)
               t.markup = '$'
               newChildren.push(t)
-            } else {
+            } else if (part.trim()) {
               const t = new state.Token('text', '', 0)
               t.content = part
               newChildren.push(t)
@@ -442,7 +442,6 @@ function katexMarkdown(md) {
     renderKatex(tokens[idx].content, false)
   md.renderer.rules.math_block = (tokens, idx) =>
     `<p>${renderKatex(tokens[idx].content, true)}</p>\n`
-  rescueMathInInline(md)
 }
 
 function footnoteTitlePlugin(md) {

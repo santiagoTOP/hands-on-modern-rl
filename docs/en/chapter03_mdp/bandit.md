@@ -88,11 +88,11 @@ Sum up **(outcome value) × (its probability)** across outcomes.
 
 Example: flip a fair coin. Heads wins $+1$, tails loses $-1$. Any single flip can lose money, but across 1000 flips you will see about 500 heads and 500 tails:
 
-$$\\text{total profit} = 500 \times (+1) + 500 \times (-1) = 0 \quad \Rightarrow \quad \\text{average per trial} = \frac{0}{1000} = 0$$
+$$\text{total profit} = 500 \times (+1) + 500 \times (-1) = 0 \quad \Rightarrow \quad \text{average per trial} = \frac{0}{1000} = 0$$
 
 Alternatively, compute it directly from probabilities:
 
-$$\\text{average per trial} = \frac{500 \times (+1) + 500 \times (-1)}{1000}$$
+$$\text{average per trial} = \frac{500 \times (+1) + 500 \times (-1)}{1000}$$
 
 Since 500 is 0.5 × 1000 (50% probability times 1000 trials), we can rewrite:
 
@@ -102,7 +102,7 @@ Cancel the 1000:
 
 $$= 0.5 \times (+1) + 0.5 \times (-1) = 0$$
 
-This matches the definition $\\mathbb{E}[X] = 0.5 \\times 1 + 0.5 \\times (-1) = 0$.
+This matches the definition $\mathbb{E}[X] = 0.5 \times 1 + 0.5 \times (-1) = 0$.
 :::
 
 With this tool, we can compute the **expected payoff** for each machine per play:
