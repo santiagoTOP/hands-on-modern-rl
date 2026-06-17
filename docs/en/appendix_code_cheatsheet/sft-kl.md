@@ -8,7 +8,7 @@ title: C.1 SFT and KL
 
 ### One-Line Memory
 
-> Read the previous word, guess the next. The question doesn't count; only the answer does.
+> The model predicts the next word: at each position, the target is the actual token right after it; cross-entropy only on the answer part (`label != -100`).
 
 ### Pseudocode
 
@@ -93,7 +93,7 @@ def sft_loss(logits, labels, ignore_index=-100):
 
 ### One-Line Memory
 
-> Measure how far apart two models are. The simple estimator can go negative; the safe one never does.
+> How far apart two models are: k1 = log(p/q) averaged (direct, can go negative); k3 = exp(ref − cur) − 1 − (ref − cur) (always ≥ 0, mind the direction).
 
 Interview-style questions:
 

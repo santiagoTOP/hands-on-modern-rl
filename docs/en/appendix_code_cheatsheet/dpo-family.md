@@ -12,7 +12,7 @@ In post-training interviews, DPO loss is the single most frequently requested �
 
 ### One-Line Memory
 
-> Push good answers up, push bad answers down — both compared against the reference model.
+> 4 log-probs (2 models × 2 answers); for each, take (current − ref); good ratio minus bad ratio, scale by β, sigmoid + negative log.
 
 $$\mathcal{L}_{DPO} = -\mathbb{E}\Big[\log\sigma\Big(\beta\big(\log\frac{\pi_\theta(y_w|x)}{\pi_{ref}(y_w|x)} - \log\frac{\pi_\theta(y_l|x)}{\pi_{ref}(y_l|x)}\big)\Big)\Big]$$
 

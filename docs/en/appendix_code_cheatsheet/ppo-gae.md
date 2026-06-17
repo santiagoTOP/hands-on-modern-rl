@@ -12,7 +12,7 @@ PPO is one of the most frequently tested algorithms in LLM RL interviews. Interv
 
 ### One-Line Memory
 
-> Sweep backward from the last step: today's reward plus the discounted future advantage.
+> Sweep backward: $\hat{A}_t = \delta_t + \gamma\lambda \hat{A}_{t+1}$ where $\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)$.
 
 GAE is prerequisite knowledge for PPO, and is often asked on its own.
 

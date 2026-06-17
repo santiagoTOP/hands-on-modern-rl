@@ -10,7 +10,7 @@ title: C.4 GRPO and Reward Models
 
 ### One-Line Memory
 
-> No critic. Let the group decide who's good.
+> Sample G answers for one prompt; z-score the rewards within each group as the advantage; copy PPO from there (clipped loss + KL); no critic.
 
 ### Pseudocode
 

@@ -6,7 +6,7 @@
 
 ### 一句话记忆
 
-> **同一题采一群答案，组内比个高低当优势；其余照抄 PPO，砍掉 Critic。**
+> **同一题采 G 条回答，组内 reward 做 z-score 当 advantage；其余照抄 PPO（clipped loss + KL），砍掉 Critic。**
 
 ### 伪代码
 
