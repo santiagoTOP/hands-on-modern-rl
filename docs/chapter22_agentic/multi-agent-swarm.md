@@ -1,6 +1,6 @@
-# 22.5 多智能体协作与 Agent Swarm
+# 22.7 多智能体协作与 Agent Swarm
 
-> [22.5 Code Interpreter RL](./industrial-practice) 训练了**单个** agent 在工具调用循环里完成编程任务。但当任务从"写一个函数"升级到"重构整个代码库 + 跑测试 + 写文档 + 提 PR"，单个 agent 的上下文窗口、注意力带宽、错误恢复能力都会被压垮。**多智能体协作**（multi-agent collaboration）是 agentic RL 在 2025-2026 年的关键扩展：把一个复杂任务拆给多个 agent，每个 agent 专注一个子任务，通过显式通信协议协调。本节讲清楚三件事：(1) LLM-era 多智能体与经典 MARL 的根本差异；(2) 主流协作范式（Orchestrator-Worker、Debate、Swarm）；(3) 多 agent 系统的 RL 训练方法。
+> [22.6 Code Interpreter RL](./industrial-practice) 训练了**单个** agent 在工具调用循环里完成编程任务。但当任务从"写一个函数"升级到"重构整个代码库 + 跑测试 + 写文档 + 提 PR"，单个 agent 的上下文窗口、注意力带宽、错误恢复能力都会被压垮。**多智能体协作**（multi-agent collaboration）是 agentic RL 在 2025-2026 年的关键扩展：把一个复杂任务拆给多个 agent，每个 agent 专注一个子任务，通过显式通信协议协调。本节讲清楚三件事：(1) LLM-era 多智能体与经典 MARL 的根本差异；(2) 主流协作范式（Orchestrator-Worker、Debate、Swarm）；(3) 多 agent 系统的 RL 训练方法。
 
 ## 从经典 MARL 到 LLM-era 多智能体
 
